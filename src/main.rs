@@ -1,7 +1,7 @@
 #![deny(clippy::all)]
 #![forbid(unsafe_code)]
 
-mod Buffer;
+mod buffer;
 
 use winit::dpi::LogicalSize;
 use log::error;
@@ -34,42 +34,45 @@ fn main() {
         Pixels::new(WIDTH, HEIGHT, surface_texture).unwrap()
     };
 
-    let mut buffer = Buffer::Buffer::new(2, 2);
+    let mut main_buffer = buffer::Buffer::new(WIDTH, HEIGHT);
+
+    let mut buffer = buffer::Buffer::from_png_atlas("test.png", 0, 0, 16, 16);
     buffer.set_pixel(0, 0, 255, 255, 255, 255);
-    buffer.set_pixel(1, 1, 155, 155, 155, 155);
+    buffer.set_pixel(1, 0, 255, 100, 100, 255);
+    buffer.set_pixel(0, 1, 255, 100, 100, 255);
+    buffer.set_pixel(1, 1, 255, 255, 255, 255);
 
-    buffer.blit(pixels.get_frame(), 0, 0);
+    buffer.blit(&mut main_buffer, 100, 50);
 
-    Buffer::Buffer::from_png("items.png");
+    event_loop.run(move |event, _, control_flow| {
+        pixels.get_frame();
 
-    // event_loop.run(move |event, _, control_flow| {
-    //     pixels.get_frame();
-    //
-    //     if let Event::RedrawRequested(_) = event {
-    //         if pixels
-    //             .render()
-    //             .map_err(|e| error!("pixels.render() failed: {}", e))
-    //             .is_err()
-    //         {
-    //             *control_flow = ControlFlow::Exit;
-    //             return;
-    //         }
-    //     }
-    //
-    //     if input.update(&event) {
-    //         // Close events
-    //         if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
-    //             *control_flow = ControlFlow::Exit;
-    //             return;
-    //         }
-    //
-    //         // Resize the window
-    //         if let Some(size) = input.window_resized() {
-    //             pixels.resize_surface(size.width, size.height);
-    //         }
-    //
-    //         // Update internal state and request a redraw
-    //         window.request_redraw();
-    //     }
-    // });
+        if let Event::RedrawRequested(_) = event {
+            main_buffer.dump(pixels.get_frame());
+            if pixels
+                .render()
+                .map_err(|e| error!("pixels.render() failed: {}", e))
+                .is_err()
+            {
+                *control_flow = ControlFlow::Exit;
+                return;
+            }
+        }
+
+        if input.update(&event) {
+            // Close events
+            if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
+                *control_flow = ControlFlow::Exit;
+                return;
+            }
+
+            // Resize the window
+            if let Some(size) = input.window_resized() {
+                pixels.resize_surface(size.width, size.height);
+            }
+
+            // Update internal state and request a redraw
+            window.request_redraw();
+        }
+    });
 }

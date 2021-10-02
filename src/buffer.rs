@@ -28,11 +28,7 @@ impl Buffer {
         }
     }
 
-    pub fn from_png(filepath : &str) {
-
-    }
-
-    pub fn from_png_snippet(filepath : &str, x : u32, y : u32, width : u32, height : u32) -> Buffer {
+    pub fn from_png(filepath : &str) -> Buffer {
         let (info, mut reader) = {
             let mut path = PathBuf::from("./assets/sprites/");
             path.push(filepath);
@@ -43,18 +39,49 @@ impl Buffer {
 
         let mut frame = vec![0; info.buffer_size()];
         reader.next_frame(&mut frame).unwrap();
-        let frame = frame.chunks_exact(4);
+
+        Buffer::from(frame, info.width, info.height)
+    }
+
+    pub fn from_png_atlas(filepath : &str, x : u32, y : u32, width : u32, height : u32) -> Buffer {
+        let (info, mut reader) = {
+            let mut path = PathBuf::from("./assets/sprites/");
+            path.push(filepath);
+            let file = File::open(path).unwrap();
+            let decoder = png::Decoder::new(file);
+            decoder.read_info().expect("Unable to encode image! File may be corrupt or not a png!")
+        };
+
+        //println!("{:?}", info.bit_depth);
+
+        let mut frame = vec![0; info.buffer_size()];
+        reader.next_frame(&mut frame).unwrap();
 
         let mut buffer = Buffer::new(width, height);
 
         for i in 0..width {
             for j in 0..height {
-                let current_pixel = frame[(x + i) + ((y + j) * info.width)];
-                buffer.set_pixel(i, j, current_pixel[0], current_pixel[1], current_pixel[2], current_pixel[3])
+                let index : usize = ((x + i) + ((y + j) * info.width)) as usize;
+                println!("{}", index);
+                buffer.set_pixel(i, j,
+                                 frame[index],
+                                 frame[index + 1],
+                                 frame[index + 2],
+                                 frame[index + 3])
             }
         }
 
         buffer
+    }
+
+    fn read_from_file(filename : &str) {
+        let (info, mut reader) = {
+            let mut path = PathBuf::from("./assets/sprites/");
+            path.push(filename);
+            let file = File::open(path).unwrap();
+            let decoder = png::Decoder::new(file);
+            decoder.read_info().expect("Unable to encode image! File may be corrupt or not a png!")
+        };
     }
 
     fn calc_index(&self, x : u32, y : u32) -> usize {
@@ -75,17 +102,19 @@ impl Buffer {
         (self.buffer[index], self.buffer[index + 1], self.buffer[index + 2], self.buffer[index + 3])
     }
 
-    pub fn blit(&self, buffer : &mut [u8], x : u32, y : u32) {
+    pub fn blit(&self, buffer : &mut Buffer, x : u32, y : u32) {
         for i in 0..self.width {
             for j in 0..self.height {
-                let index_self = self.calc_index(i, j);
-                let index_other = self.calc_index(x + i, y + j);
-
-                buffer[index_other] = self.buffer[index_self];
-                buffer[index_other + 1] = self.buffer[index_self + 1];
-                buffer[index_other + 2] = self.buffer[index_self + 2];
-                buffer[index_other + 3] = self.buffer[index_self + 3];
+                let (r, g, b, a) = self.get_pixel(i, j);
+                println!("[{},{},{},{}]", r, g, b, a);
+                buffer.set_pixel(x + i, y + j, r, g, b, 255);
             }
+        }
+    }
+
+    pub fn dump(&self, arr : &mut [u8]) {
+        for (i, v) in self.buffer.iter().enumerate() {
+            arr[i] = *v;
         }
     }
 }
