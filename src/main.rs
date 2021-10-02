@@ -36,11 +36,7 @@ fn main() {
 
     let mut main_buffer = buffer::Buffer::new(WIDTH, HEIGHT);
 
-    let mut buffer = buffer::Buffer::from_png_atlas("ui.png", 0, 0, 16, 16);
-    buffer.set_pixel(0, 0, 255, 255, 255, 255);
-    buffer.set_pixel(1, 0, 255, 100, 100, 255);
-    buffer.set_pixel(0, 1, 255, 100, 100, 255);
-    buffer.set_pixel(1, 1, 255, 255, 255, 255);
+    let mut buffer = buffer::Buffer::from_png_atlas("tileset_0.png", 48, 0, 32, 32);
 
     buffer.blit(&mut main_buffer, 100, 50);
 

@@ -97,6 +97,19 @@ impl Buffer {
         self.buffer[index + 3] = a;
     }
 
+    pub fn blend_pixel(&mut self, x : u32, y : u32, r : u8, g : u8, b : u8, a : u8) {
+        let index = self.calc_index(x, y);
+
+        let alpha : f32 = a as f32 / 255.0;
+
+        self.buffer[index] += ((r as f32) * (alpha)) as u8;
+        self.buffer[index + 1] += ((g as f32) * (alpha)) as u8;;
+        self.buffer[index + 2] += ((b as f32) * (alpha)) as u8;;
+        self.buffer[index + 3] += a;
+
+        println!("[{}, {}, {}, {}]", self.buffer[index], self.buffer[index + 1], self.buffer[index + 2], self.buffer[index + 3])
+    }
+
     pub fn get_pixel(&self, x : u32, y : u32) -> (u8, u8, u8, u8) {
         let index = self.calc_index(x, y);
         (self.buffer[index], self.buffer[index + 1], self.buffer[index + 2], self.buffer[index + 3])
@@ -106,8 +119,8 @@ impl Buffer {
         for i in 0..self.width {
             for j in 0..self.height {
                 let (r, g, b, a) = self.get_pixel(i, j);
-                println!("[{},{},{},{}]", r, g, b, a);
-                buffer.set_pixel(x + i, y + j, r, g, b, 255);
+                //println!("[{},{},{},{}]", r, g, b, a);
+                buffer.blend_pixel(x + i, y + j, r, g, b, a);
             }
         }
     }
