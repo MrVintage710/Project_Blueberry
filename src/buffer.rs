@@ -61,7 +61,7 @@ impl Buffer {
 
         for i in 0..width {
             for j in 0..height {
-                let index : usize = ((x + i) + ((y + j) * info.width)) as usize;
+                let index : usize = ((x + j) * 4 + ((y + i) * info.width * 4)) as usize;
                 println!("{}", index);
                 buffer.set_pixel(i, j,
                                  frame[index],
