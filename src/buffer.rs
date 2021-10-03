@@ -9,6 +9,12 @@ pub struct Buffer {
     buffer : Vec<u8>
 }
 
+pub trait BufferProvider {
+    fn get_buffer(&self) -> &Buffer;
+
+    fn get_buffer_mut(&mut self) -> &mut Buffer;
+}
+
 impl Buffer {
     pub fn new(width : u32, height : u32) -> Buffer {
         let buffer : Vec<u8> = vec![0; (width * height * 4) as usize];

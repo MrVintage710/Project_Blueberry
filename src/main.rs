@@ -2,6 +2,7 @@
 #![forbid(unsafe_code)]
 
 mod buffer;
+mod draw;
 
 use winit::dpi::LogicalSize;
 use log::error;
@@ -10,6 +11,7 @@ use winit::event_loop::{EventLoop, ControlFlow};
 use winit::event::{Event, VirtualKeyCode};
 use pixels::{SurfaceTexture, Pixels};
 use winit_input_helper::WinitInputHelper;
+use crate::buffer::Buffer;
 
 const WIDTH : u32 = 320;
 const HEIGHT : u32 = 240;
@@ -34,11 +36,11 @@ fn main() {
         Pixels::new(WIDTH, HEIGHT, surface_texture).unwrap()
     };
 
-    let mut main_buffer = buffer::Buffer::new(WIDTH, HEIGHT);
+    let mut main_buffer = Buffer::new(WIDTH, HEIGHT);
 
-    let mut buffer = buffer::Buffer::from_png_atlas("tileset_0.png", 48, 0, 32, 32);
+    let mut buffer = Buffer::from_png_atlas("tileset_0.png", 0, 0, 16, 16);
 
-    buffer.blit(&mut main_buffer, 100, 50);
+    buffer.blit(&mut main_buffer, 0, 0);
 
     event_loop.run(move |event, _, control_flow| {
         pixels.get_frame();
