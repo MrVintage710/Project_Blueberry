@@ -15,6 +15,16 @@ pub trait BufferProvider {
     fn get_buffer_mut(&mut self) -> &mut Buffer;
 }
 
+impl BufferProvider for Buffer {
+    fn get_buffer(&self) -> &Buffer {
+        self
+    }
+
+    fn get_buffer_mut(&mut self) -> &mut Buffer {
+        self
+    }
+}
+
 impl Buffer {
     pub fn new(width : u32, height : u32) -> Buffer {
         let buffer : Vec<u8> = vec![0; (width * height * 4) as usize];
@@ -68,7 +78,6 @@ impl Buffer {
         for i in 0..width {
             for j in 0..height {
                 let index : usize = ((x + j) * 4 + ((y + i) * info.width * 4)) as usize;
-                println!("{}", index);
                 buffer.set_pixel(i, j,
                                  frame[index],
                                  frame[index + 1],
@@ -112,8 +121,6 @@ impl Buffer {
         self.buffer[index + 1] += ((g as f32) * (alpha)) as u8;;
         self.buffer[index + 2] += ((b as f32) * (alpha)) as u8;;
         self.buffer[index + 3] += a;
-
-        println!("[{}, {}, {}, {}]", self.buffer[index], self.buffer[index + 1], self.buffer[index + 2], self.buffer[index + 3])
     }
 
     pub fn get_pixel(&self, x : u32, y : u32) -> (u8, u8, u8, u8) {
@@ -125,7 +132,6 @@ impl Buffer {
         for i in 0..self.width {
             for j in 0..self.height {
                 let (r, g, b, a) = self.get_pixel(i, j);
-                //println!("[{},{},{},{}]", r, g, b, a);
                 buffer.blend_pixel(x + i, y + j, r, g, b, a);
             }
         }

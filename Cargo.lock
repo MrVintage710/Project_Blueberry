@@ -1090,6 +1090,7 @@ version = "0.1.0"
 dependencies = [
  "env_logger",
  "log",
+ "num-traits",
  "pixels",
  "png",
  "winit",

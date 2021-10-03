@@ -3,6 +3,9 @@
 
 mod buffer;
 mod draw;
+mod math;
+
+extern crate num_traits;
 
 use winit::dpi::LogicalSize;
 use log::error;
@@ -12,6 +15,7 @@ use winit::event::{Event, VirtualKeyCode};
 use pixels::{SurfaceTexture, Pixels};
 use winit_input_helper::WinitInputHelper;
 use crate::buffer::Buffer;
+use crate::math::{Vec2i, Vec2};
 
 const WIDTH : u32 = 320;
 const HEIGHT : u32 = 240;
@@ -39,6 +43,10 @@ fn main() {
     let mut main_buffer = Buffer::new(WIDTH, HEIGHT);
 
     let mut buffer = Buffer::from_png_atlas("tileset_0.png", 0, 0, 16, 16);
+
+    let mut vec = Vec2i::new(2, 2);
+
+    println!("{:?}", vec.mul(10));
 
     buffer.blit(&mut main_buffer, 0, 0);
 
