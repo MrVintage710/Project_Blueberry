@@ -4,6 +4,7 @@
 mod buffer;
 mod draw;
 mod math;
+mod grid;
 
 extern crate num_traits;
 
@@ -19,6 +20,7 @@ use crate::math::{Vec2i, Vec2};
 
 const WIDTH : u32 = 320;
 const HEIGHT : u32 = 240;
+const RATE : f32 = 0.1;
 
 fn main() {
     let event_loop = EventLoop::new();
@@ -44,16 +46,16 @@ fn main() {
 
     let mut buffer = Buffer::from_png_atlas("tileset_0.png", 0, 0, 16, 16);
 
-    let mut vec = Vec2i::new(2, 2);
-
-    println!("{:?}", vec.mul(10));
-
     buffer.blit(&mut main_buffer, 0, 0);
 
-    event_loop.run(move |event, _, control_flow| {
-        pixels.get_frame();
+    let mut counter = 0.0;
 
+    event_loop.run(move |event, _, control_flow| {
         if let Event::RedrawRequested(_) = event {
+            counter += RATE;
+            let i = counter.round() as i32;
+            buffer.blit(&mut main_buffer, -8 + i, -8 + i);
+
             main_buffer.dump(pixels.get_frame());
             if pixels
                 .render()
@@ -63,6 +65,8 @@ fn main() {
                 *control_flow = ControlFlow::Exit;
                 return;
             }
+
+            main_buffer.clear();
         }
 
         if input.update(&event) {

@@ -1,4 +1,4 @@
-use std::ops::Add;
+use std::ops::{Add, Deref};
 
 extern crate num_traits;
 use num_traits::Num;
@@ -21,9 +21,10 @@ pub trait Vec2<T: Num> {
         self.set_xy(x - ox, y - oy);
     }
 
-    fn mul(&mut self, other : T) {
+    fn dot(&self, other : &Vec2<T>) -> T {
+        let (ox, oy) = other.get_xy();
         let (x, y) = self.get_xy();
-        self.set_xy(x * other, y * other);
+        x * ox + y * oy
     }
 }
 
@@ -40,6 +41,7 @@ impl Vec2i {
 }
 
 impl Vec2<i32> for Vec2i {
+
     fn get_xy(&self) -> (i32, i32) {
         (self.x, self.y)
     }
@@ -49,22 +51,3 @@ impl Vec2<i32> for Vec2i {
         self.y = y;
     }
 }
-
-// trait Vec2i {
-//     fn get_xy(&self) -> (i32, i32);
-//
-//     fn get_x(&self) -> i32 {
-//         self.get_xy().0
-//     }
-//
-//     fn get_y(&self) -> i32 {
-//         self.get_xy().1
-//     }
-//
-//     fn magnitude(&self) -> f32 {
-//         let (x, y) = self.get_xy();
-//         let xf = x as f32;
-//         let yf = y as f32;
-//         (xf.powf(2.0) + yf.powf(2.0)).sqrt()
-//     }
-// }

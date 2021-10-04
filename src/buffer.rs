@@ -100,7 +100,11 @@ impl Buffer {
     }
 
     fn calc_index(&self, x : u32, y : u32) -> usize {
-        (x * 4 + (y * self.width * 4)) as usize
+        ((x * 4 + (y * self.width * 4)) as usize).clamp(0, self.buffer.len().saturating_sub(1))
+    }
+
+    pub fn contains(&self, x : i32, y : i32) -> bool {
+        x > 0 && x < self.width as i32 && y > 0 && y < self.height as i32
     }
 
     pub fn set_pixel(&mut self, x : u32, y : u32, r : u8, g : u8, b : u8, a : u8) {
@@ -113,14 +117,19 @@ impl Buffer {
     }
 
     pub fn blend_pixel(&mut self, x : u32, y : u32, r : u8, g : u8, b : u8, a : u8) {
-        let index = self.calc_index(x, y);
+        if x < self.width && y < self.height {
+            let index = self.calc_index(x, y);
+            let alpha : f32 = a as f32 / 255.0;
 
-        let alpha : f32 = a as f32 / 255.0;
+            let rd = ((r as f32) * (alpha)) as u8;
+            let gd = ((g as f32) * (alpha)) as u8;
+            let bd = ((b as f32) * (alpha)) as u8;
 
-        self.buffer[index] += ((r as f32) * (alpha)) as u8;
-        self.buffer[index + 1] += ((g as f32) * (alpha)) as u8;;
-        self.buffer[index + 2] += ((b as f32) * (alpha)) as u8;;
-        self.buffer[index + 3] += a;
+            self.buffer[index] = self.buffer[index].saturating_add(rd);
+            self.buffer[index + 1] = self.buffer[index + 1].saturating_add(gd);
+            self.buffer[index + 2] = self.buffer[index + 2].saturating_add(bd);
+            self.buffer[index + 3] = self.buffer[index + 3].saturating_add(a);
+        }
     }
 
     pub fn get_pixel(&self, x : u32, y : u32) -> (u8, u8, u8, u8) {
@@ -128,11 +137,13 @@ impl Buffer {
         (self.buffer[index], self.buffer[index + 1], self.buffer[index + 2], self.buffer[index + 3])
     }
 
-    pub fn blit(&self, buffer : &mut Buffer, x : u32, y : u32) {
+    pub fn blit(&self, other: &mut Buffer, x : i32, y : i32) {
         for i in 0..self.width {
             for j in 0..self.height {
-                let (r, g, b, a) = self.get_pixel(i, j);
-                buffer.blend_pixel(x + i, y + j, r, g, b, a);
+                if other.contains(x + i as i32, y + j as i32) {
+                    let (r, g, b, a) = self.get_pixel(i, j);
+                    other.blend_pixel((x + i as i32) as u32, (y + j as i32) as u32, r, g, b, a);
+                }
             }
         }
     }
@@ -141,5 +152,10 @@ impl Buffer {
         for (i, v) in self.buffer.iter().enumerate() {
             arr[i] = *v;
         }
+    }
+
+    pub fn clear(&mut self) {
+        self.buffer.clear();
+        self.buffer.resize((self.width * self.height * 4) as usize, 0);
     }
 }
