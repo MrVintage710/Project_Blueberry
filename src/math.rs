@@ -51,3 +51,19 @@ impl Vec2<i32> for Vec2i {
         self.y = y;
     }
 }
+
+pub struct Transform {
+    x : i32,
+    y : i32
+}
+
+impl Vec2<i32> for Transform {
+    fn get_xy(&self) -> (i32, i32) {
+        (self.x, self.y)
+    }
+
+    fn set_xy(&mut self, x: i32, y: i32) {
+        self.x = x;
+        self.y = y;
+    }
+}

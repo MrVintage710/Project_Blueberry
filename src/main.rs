@@ -31,7 +31,7 @@ fn main() {
         WindowBuilder::new()
             .with_title("Project Blueberry")
             .with_inner_size(size)
-            //.with_min_inner_size(size)
+            .with_min_inner_size(size)
             .build(&event_loop)
             .expect("Unable to Build window.")
     };
