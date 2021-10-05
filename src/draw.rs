@@ -2,7 +2,7 @@ use crate::buffer::{Buffer, BufferProvider};
 use crate::math::{Vec2, Vec2i};
 use num_traits::Num;
 
-trait Drawable {
+pub trait Drawable {
     fn draw(&self, buffer : &mut Buffer, delta : f32);
 }
 

@@ -5,6 +5,7 @@ mod buffer;
 mod draw;
 mod math;
 mod grid;
+mod scene;
 
 extern crate num_traits;
 
@@ -51,8 +52,11 @@ fn main() {
     let mut counter = 0.0;
 
     event_loop.run(move |event, _, control_flow| {
-        if let Event::RedrawRequested(_) = event {
+        if let Event::MainEventsCleared = event {
             counter += RATE;
+        }
+
+        if let Event::RedrawRequested(_) = event {
             let i = counter.round() as i32;
             buffer.blit(&mut main_buffer, -8 + i, -8 + i);
 
