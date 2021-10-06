@@ -6,21 +6,25 @@ mod draw;
 mod math;
 mod grid;
 mod scene;
+mod imgui;
 
 extern crate num_traits;
 
 use winit::dpi::LogicalSize;
 use log::error;
+use game_loop::game_loop;
 use winit::window::WindowBuilder;
 use winit::event_loop::{EventLoop, ControlFlow};
 use winit::event::{Event, VirtualKeyCode};
 use pixels::{SurfaceTexture, Pixels};
 use winit_input_helper::WinitInputHelper;
-use crate::buffer::Buffer;
+use crate::buffer::{Buffer, BufferAtlas};
 use crate::math::{Vec2i, Vec2};
+use crate::scene::{GameObject, RenderComponent};
+use std::time::Instant;
 
-const WIDTH : u32 = 320;
-const HEIGHT : u32 = 240;
+const WIDTH : u32 = 240;
+const HEIGHT : u32 = 160;
 const RATE : f32 = 0.1;
 
 fn main() {
@@ -37,32 +41,46 @@ fn main() {
             .expect("Unable to Build window.")
     };
 
+    let mut scale_factor = window.scale_factor();
+    println!("{}", scale_factor);
+
     let mut pixels = {
         let window_size = window.inner_size();
         let surface_texture = SurfaceTexture::new(window_size.width, window_size.height, &window);
         Pixels::new(WIDTH, HEIGHT, surface_texture).unwrap()
     };
 
+    let mut im_gui = imgui::Gui::new(&window, &pixels);
+
     let mut main_buffer = Buffer::new(WIDTH, HEIGHT);
 
-    let mut buffer = Buffer::from_png_atlas("tileset_0.png", 0, 0, 16, 16);
-
-    buffer.blit(&mut main_buffer, 0, 0);
-
-    let mut counter = 0.0;
+    let mut startTime = Instant::now();
+    let mut updates = 0;
 
     event_loop.run(move |event, _, control_flow| {
         if let Event::MainEventsCleared = event {
-            counter += RATE;
+            let delta = startTime.elapsed();
+            if delta.as_secs_f64() >= 1.0 {
+                println!("{}", updates);
+                startTime = Instant::now();
+                updates = 0;
+            }
+
+            updates += 1;
+
+            if (updates % 2) == 0 { window.request_redraw(); }
         }
 
         if let Event::RedrawRequested(_) = event {
-            let i = counter.round() as i32;
-            buffer.blit(&mut main_buffer, -8 + i, -8 + i);
-
             main_buffer.dump(pixels.get_frame());
-            if pixels
-                .render()
+            //im_gui.prepare(&window);
+
+            let render_results = pixels.render_with(|encoder, render_target, context| {
+                context.scaling_renderer.render(encoder, render_target);
+                //im_gui.render(&window, encoder, render_target, context).expect("Unable to render IMGUI");
+            });
+
+            if render_results
                 .map_err(|e| error!("pixels.render() failed: {}", e))
                 .is_err()
             {
@@ -73,6 +91,7 @@ fn main() {
             main_buffer.clear();
         }
 
+        im_gui.handle_event(&window, &event);
         if input.update(&event) {
             // Close events
             if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
@@ -82,11 +101,10 @@ fn main() {
 
             // Resize the window
             if let Some(size) = input.window_resized() {
-                pixels.resize_surface(size.width, size.height);
+                if size.width > 0 && size.height > 0 {
+                    pixels.resize_surface(size.width, size.height);
+                }
             }
-
-            // Update internal state and request a redraw
-            window.request_redraw();
         }
     });
 }

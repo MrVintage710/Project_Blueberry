@@ -44,6 +44,13 @@ pub struct Vec2i {
     y: i32
 }
 
+#[macro_export]
+macro_rules! vec2i {
+    ( $x:expr, $y:expr ) => {
+        Vec2i::new($x, $y)
+    }
+}
+
 impl Vec2i {
     pub fn new(x : i32, y : i32) -> Vec2i {
         Vec2i { x, y }

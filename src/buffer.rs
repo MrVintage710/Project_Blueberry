@@ -1,6 +1,17 @@
 use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::BufWriter;
+use png::{OutputInfo, Reader};
+
+const PATH_TO_SPRITES : &str = "./assets/sprites/";
+
+fn read_from_file(filename : &str) -> (OutputInfo, Reader<File>) {
+    let mut path = PathBuf::from(PATH_TO_SPRITES);
+    path.push(filename);
+    let file = File::open(path).unwrap();
+    let decoder = png::Decoder::new(file);
+    decoder.read_info().expect("Unable to encode image! File may be corrupt or not a png!")
+}
 
 #[derive(Debug)]
 pub struct Buffer {
@@ -45,13 +56,7 @@ impl Buffer {
     }
 
     pub fn from_png(filepath : &str) -> Buffer {
-        let (info, mut reader) = {
-            let mut path = PathBuf::from("./assets/sprites/");
-            path.push(filepath);
-            let file = File::open(path).unwrap();
-            let decoder = png::Decoder::new(file);
-            decoder.read_info().expect("Unable to encode image! File may be corrupt or not a png!")
-        };
+        let (info, mut reader) = read_from_file(filepath);
 
         let mut frame = vec![0; info.buffer_size()];
         reader.next_frame(&mut frame).unwrap();
@@ -60,13 +65,7 @@ impl Buffer {
     }
 
     pub fn from_png_atlas(filepath : &str, x : u32, y : u32, width : u32, height : u32) -> Buffer {
-        let (info, mut reader) = {
-            let mut path = PathBuf::from("./assets/sprites/");
-            path.push(filepath);
-            let file = File::open(path).unwrap();
-            let decoder = png::Decoder::new(file);
-            decoder.read_info().expect("Unable to encode image! File may be corrupt or not a png!")
-        };
+        let (info, mut reader) = read_from_file(filepath);
 
         //println!("{:?}", info.bit_depth);
 
@@ -87,16 +86,6 @@ impl Buffer {
         }
 
         buffer
-    }
-
-    fn read_from_file(filename : &str) {
-        let (info, mut reader) = {
-            let mut path = PathBuf::from("./assets/sprites/");
-            path.push(filename);
-            let file = File::open(path).unwrap();
-            let decoder = png::Decoder::new(file);
-            decoder.read_info().expect("Unable to encode image! File may be corrupt or not a png!")
-        };
     }
 
     fn calc_index(&self, x : u32, y : u32) -> usize {
@@ -157,5 +146,65 @@ impl Buffer {
     pub fn clear(&mut self) {
         self.buffer.clear();
         self.buffer.resize((self.width * self.height * 4) as usize, 0);
+    }
+}
+
+#[macro_export]
+macro_rules! buffer_atlas {
+    ( $n:literal | $({$x:expr, $y:expr, $w:expr, $h:expr}),* ) => {
+        {
+            let mut ba = BufferAtlas::new($n);
+            $(
+                ba.add($x, $y, $w, $h);
+            )*
+            ba
+        }
+    };
+    ( $n:literal | $w:expr, $h:expr ) => {
+        {
+            let mut ba = BufferAtlas::new($n);
+            ba.slice($w, $h);
+            ba
+        }
+    }
+}
+
+pub struct BufferAtlas {
+    buffers: Vec<Buffer>,
+    file : String,
+    texture_width : u32,
+    texture_height : u32
+}
+
+impl BufferAtlas {
+    pub fn new(filename : &str) -> BufferAtlas {
+        let (info, _) = read_from_file(filename);
+        BufferAtlas {
+            buffers: Vec::new(),
+            file: String::from(filename),
+            texture_width: info.width,
+            texture_height: info.height
+        }
+    }
+
+    pub fn slice(&mut self, width : u32, height : u32) {
+        let remainder_x = self.texture_width % width;
+        let remainder_y = self.texture_height % height;
+
+        for i in 0..((self.texture_width - remainder_x)/width) {
+            for j in 0..((self.texture_height - remainder_y)/height) {
+                let x = i * width;
+                let y = j * height;
+                self.add(x, y, width, height);
+            }
+        }
+    }
+
+    pub fn add(&mut self, x : u32, y : u32, width : u32, height : u32) {
+        self.buffers.push(Buffer::from_png_atlas(self.file.as_str(), x, y, width, height));
+    }
+
+    pub fn get_buffer(&self, index : usize) -> &Buffer {
+        self.buffers.get(index).expect(format!("{} is out of bounds. Length of BufferAtlas: {}", index, self.buffers.len()).as_str())
     }
 }
