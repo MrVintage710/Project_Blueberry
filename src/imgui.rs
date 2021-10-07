@@ -1,6 +1,7 @@
 use pixels::{wgpu, PixelsContext};
 use std::time::Instant;
-use imgui::ImStr;
+use imgui::{ImStr, Ui};
+use crate::game::GameState;
 
 /// Manages all state required for rendering Dear ImGui over `Pixels`.
 pub struct Gui {
@@ -81,6 +82,7 @@ impl Gui {
         encoder: &mut wgpu::CommandEncoder,
         render_target: &wgpu::TextureView,
         context: &PixelsContext,
+        gs : &GameState
     ) -> imgui_wgpu::RendererResult<()> {
         // Start a new Dear ImGui frame and update the cursor
         let ui = self.imgui.frame();
@@ -106,6 +108,8 @@ impl Gui {
             ui.show_about_window(&mut self.about_open);
         }
 
+        //gs.debug(&ui);
+
         ui.bullet_text(imgui::im_str!("Test Test 1 2 3"));
 
         // Render Dear ImGui with WGPU
@@ -124,6 +128,10 @@ impl Gui {
 
         self.renderer
             .render(ui.render(), &context.queue, &context.device, &mut rpass)
+    }
+
+    pub fn render_debug(&self, panel : &Ui, gs : &GameState) {
+        gs.debug(panel)
     }
 
     /// Handle any outstanding events.
