@@ -13,15 +13,17 @@ extern crate num_traits;
 use winit::dpi::LogicalSize;
 use log::error;
 use game_loop::game_loop;
+use game_loop::winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
-use winit::event_loop::{EventLoop, ControlFlow};
+use winit::event_loop::{ControlFlow};
 use winit::event::{Event, VirtualKeyCode};
 use pixels::{SurfaceTexture, Pixels};
 use winit_input_helper::WinitInputHelper;
 use crate::buffer::{Buffer, BufferAtlas};
 use crate::math::{Vec2i, Vec2};
-use crate::scene::{GameObject, RenderComponent};
+use crate::scene::{GameObject, RenderComponent, Scene, World};
 use std::time::Instant;
+use std::collections::HashMap;
 
 const WIDTH : u32 = 240;
 const HEIGHT : u32 = 160;
@@ -50,61 +52,89 @@ fn main() {
         Pixels::new(WIDTH, HEIGHT, surface_texture).unwrap()
     };
 
-    let mut im_gui = imgui::Gui::new(&window, &pixels);
-
     let mut main_buffer = Buffer::new(WIDTH, HEIGHT);
 
     let mut startTime = Instant::now();
     let mut updates = 0;
 
-    event_loop.run(move |event, _, control_flow| {
-        if let Event::MainEventsCleared = event {
-            let delta = startTime.elapsed();
-            if delta.as_secs_f64() >= 1.0 {
-                println!("{}", updates);
-                startTime = Instant::now();
-                updates = 0;
-            }
+    //let mut scene = Scene::new;
 
-            updates += 1;
+    let mut world = World::new(imgui::Gui::new(&window, &pixels));
 
-            if (updates % 2) == 0 { window.request_redraw(); }
-        }
+    game_loop(event_loop, window, world, 30, 0.1,
+              |g| {
 
-        if let Event::RedrawRequested(_) = event {
-            main_buffer.dump(pixels.get_frame());
-            //im_gui.prepare(&window);
+              }, move|g| {
+                main_buffer.dump(pixels.get_frame());
+                //im_gui.prepare(&g.window);
 
-            let render_results = pixels.render_with(|encoder, render_target, context| {
-                context.scaling_renderer.render(encoder, render_target);
-                //im_gui.render(&window, encoder, render_target, context).expect("Unable to render IMGUI");
-            });
+                let render_results = pixels.render_with(|encoder, render_target, context| {
+                    context.scaling_renderer.render(encoder, render_target);
+                    //im_gui.render(&g.window, encoder, render_target, context).expect("Unable to render IMGUI");
+                });
 
-            if render_results
-                .map_err(|e| error!("pixels.render() failed: {}", e))
-                .is_err()
-            {
-                *control_flow = ControlFlow::Exit;
-                return;
-            }
-
-            main_buffer.clear();
-        }
-
-        im_gui.handle_event(&window, &event);
-        if input.update(&event) {
-            // Close events
-            if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
-                *control_flow = ControlFlow::Exit;
-                return;
-            }
-
-            // Resize the window
-            if let Some(size) = input.window_resized() {
-                if size.width > 0 && size.height > 0 {
-                    pixels.resize_surface(size.width, size.height);
+                if render_results
+                    .map_err(|e| error!("pixels.render() failed: {}", e))
+                    .is_err()
+                {
+                    g.exit();
+                    return;
                 }
-            }
-        }
-    });
+
+                main_buffer.clear();
+              }, |g, event| {
+                //im_gui.handle_event(&g.window, &event);
+
+              });
+
+    // event_loop.run(move |event, _, control_flow| {
+    //     if let Event::MainEventsCleared = event {
+    //         let delta = startTime.elapsed();
+    //         if delta.as_secs_f64() >= 1.0 {
+    //             println!("{}", updates);
+    //             startTime = Instant::now();
+    //             updates = 0;
+    //         }
+    //
+    //         updates += 1;
+    //
+    //         if (updates % 2) == 0 { window.request_redraw(); }
+    //     }
+    //
+    //     if let Event::RedrawRequested(_) = event {
+    //         main_buffer.dump(pixels.get_frame());
+    //         //im_gui.prepare(&window);
+    //
+    //         let render_results = pixels.render_with(|encoder, render_target, context| {
+    //             context.scaling_renderer.render(encoder, render_target);
+    //             //im_gui.render(&window, encoder, render_target, context).expect("Unable to render IMGUI");
+    //         });
+    //
+    //         if render_results
+    //             .map_err(|e| error!("pixels.render() failed: {}", e))
+    //             .is_err()
+    //         {
+    //             *control_flow = ControlFlow::Exit;
+    //             return;
+    //         }
+    //
+    //         main_buffer.clear();
+    //     }
+    //
+    //     im_gui.handle_event(&window, &event);
+    //     if input.update(&event) {
+    //         // Close events
+    //         if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
+    //             *control_flow = ControlFlow::Exit;
+    //             return;
+    //         }
+    //
+    //         // Resize the window
+    //         if let Some(size) = input.window_resized() {
+    //             if size.width > 0 && size.height > 0 {
+    //                 pixels.resize_surface(size.width, size.height);
+    //             }
+    //         }
+    //     }
+    // });
 }

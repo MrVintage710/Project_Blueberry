@@ -3,7 +3,7 @@ use std::time::Instant;
 use imgui::ImStr;
 
 /// Manages all state required for rendering Dear ImGui over `Pixels`.
-pub(crate) struct Gui {
+pub struct Gui {
     imgui: imgui::Context,
     platform: imgui_winit_support::WinitPlatform,
     renderer: imgui_wgpu::Renderer,
