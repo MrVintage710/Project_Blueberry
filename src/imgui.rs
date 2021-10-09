@@ -59,7 +59,7 @@ impl Gui {
             renderer,
             last_frame: Instant::now(),
             last_cursor: None,
-            about_open: true,
+            about_open: false,
         }
     }
 
@@ -82,7 +82,8 @@ impl Gui {
         encoder: &mut wgpu::CommandEncoder,
         render_target: &wgpu::TextureView,
         context: &PixelsContext,
-        gs : &GameState
+        gs : &mut GameState,
+        delta : f64
     ) -> imgui_wgpu::RendererResult<()> {
         // Start a new Dear ImGui frame and update the cursor
         let ui = self.imgui.frame();
@@ -108,9 +109,8 @@ impl Gui {
             ui.show_about_window(&mut self.about_open);
         }
 
-        //gs.debug(&ui);
-
-        ui.bullet_text(imgui::im_str!("Test Test 1 2 3"));
+        ui.text(format!("UPS {}", delta));
+        gs.debug(&ui);
 
         // Render Dear ImGui with WGPU
         let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
@@ -128,10 +128,6 @@ impl Gui {
 
         self.renderer
             .render(ui.render(), &context.queue, &context.device, &mut rpass)
-    }
-
-    pub fn render_debug(&self, panel : &Ui, gs : &GameState) {
-        gs.debug(panel)
     }
 
     /// Handle any outstanding events.

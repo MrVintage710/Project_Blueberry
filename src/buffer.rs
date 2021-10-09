@@ -2,6 +2,7 @@ use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::BufWriter;
 use png::{OutputInfo, Reader};
+use crate::math::{Vec2i, Vec2};
 
 const PATH_TO_SPRITES : &str = "./assets/sprites/";
 
@@ -17,6 +18,7 @@ fn read_from_file(filename : &str) -> (OutputInfo, Reader<File>) {
 pub struct Buffer {
     width : u32,
     height : u32,
+    offset : Vec2i,
     buffer : Vec<u8>
 }
 
@@ -43,7 +45,8 @@ impl Buffer {
         Buffer {
             width,
             height,
-            buffer
+            buffer,
+            offset : Vec2i::zero()
         }
     }
 
@@ -51,7 +54,8 @@ impl Buffer {
         Buffer {
             width,
             height,
-            buffer
+            buffer,
+            offset : Vec2i::zero()
         }
     }
 
@@ -126,12 +130,17 @@ impl Buffer {
         (self.buffer[index], self.buffer[index + 1], self.buffer[index + 2], self.buffer[index + 3])
     }
 
+    pub fn set_offset(&mut self, x : i32, y : i32) {
+        self.offset.set_xy(x, y)
+    }
+
     pub fn blit(&self, other: &mut Buffer, x : i32, y : i32) {
         for i in 0..self.width {
             for j in 0..self.height {
                 if other.contains(x + i as i32, y + j as i32) {
                     let (r, g, b, a) = self.get_pixel(i, j);
-                    other.blend_pixel((x + i as i32) as u32, (y + j as i32) as u32, r, g, b, a);
+                    let (ox, oy) = self.offset.get_xy();
+                    other.blend_pixel((ox + x + i as i32) as u32, (oy + y + j as i32) as u32, r, g, b, a);
                 }
             }
         }

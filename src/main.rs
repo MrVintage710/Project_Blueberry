@@ -6,60 +6,55 @@ mod draw;
 mod math;
 mod game;
 mod imgui;
+mod input;
 
 extern crate num_traits;
 
 use winit::dpi::{LogicalSize, PhysicalSize};
 use log::error;
 use game_loop::game_loop;
-use game_loop::winit::event_loop::EventLoop;
+use game_loop::winit::event_loop::{EventLoop, ControlFlow};
 use winit::window::{WindowBuilder, Window};
-use winit::event_loop::{ControlFlow};
-use winit::event::{Event, VirtualKeyCode};
 use pixels::{SurfaceTexture, Pixels};
-use winit_input_helper::WinitInputHelper;
 use crate::buffer::{Buffer, BufferAtlas};
 use crate::math::{Vec2i, Vec2};
 use std::time::Instant;
 use std::collections::HashMap;
 use crate::game::GameState;
 use crate::imgui::Gui;
-use game_loop::winit::event::WindowEvent;
+use game_loop::winit::event::{WindowEvent, Event, VirtualKeyCode};
+use crate::draw::StaticDrawBehavior;
+use crate::input::InputInfo;
 
 const WIDTH : u32 = 240;
 const HEIGHT : u32 = 160;
-const RATE : f32 = 0.1;
 
 struct GameHandler {
     pub gs : GameState,
     pub pixels: Pixels,
     pub imgui : Gui,
     pub main_buffer : Buffer,
-    pub input : WinitInputHelper
+    pub input_info : InputInfo
 }
 
 impl GameHandler {
-    pub fn dump(&mut self) {
-        self.main_buffer.dump(self.pixels.get_frame());
-    }
-
     pub fn update(&mut self) {
-
+        self.gs.update(&self.input_info);
+        self.input_info.update();
     }
 
-    pub fn render(&mut self, window : &Window) {
-        self.dump();
+    pub fn render(&mut self, window : &Window, frame_info : &FrameInfo) {
         self.imgui.prepare(window);
 
         let imgui = &mut self.imgui;
-        let gs = &self.gs;
+        let mut gs = &mut self.gs;
 
-        self.gs.render(&mut self.main_buffer);
+        gs.render(&mut self.main_buffer);
         self.main_buffer.dump(self.pixels.get_frame());
 
         let results =  self.pixels.render_with(|encoder, render_target, context| {
             context.scaling_renderer.render(encoder, render_target);
-            imgui.render(&window, encoder, render_target, context, gs);
+            imgui.render(&window, encoder, render_target, context, gs, frame_info.delta);
         });
 
         if results
@@ -69,10 +64,11 @@ impl GameHandler {
             return;
         }
 
+        self.pixels.resize_surface(window.inner_size().width, window.inner_size().height);
         self.main_buffer.clear();
     }
 
-    pub fn handler(&mut self, window : &Window, event : Event<()>) -> bool{
+    pub fn handler(&mut self, window : &Window, event : Event<()>, frame_info : &FrameInfo) -> bool{
         self.imgui.handle_event(window, &event);
 
         match event {
@@ -88,13 +84,21 @@ impl GameHandler {
                     WindowEvent::HoveredFileCancelled => {}
                     WindowEvent::ReceivedCharacter(_) => {}
                     WindowEvent::Focused(_) => {}
-                    WindowEvent::KeyboardInput { .. } => {}
+                    WindowEvent::KeyboardInput { device_id, input, is_synthetic } => {
+                        self.input_info.set_key(input.virtual_keycode.expect("Unknown key code."), input.state)
+                    }
                     WindowEvent::ModifiersChanged(_) => {}
-                    WindowEvent::CursorMoved { .. } => {}
+                    WindowEvent::CursorMoved { device_id, position, modifiers } => {
+                        self.input_info.update_mouse_pos(position.x, position.y);
+                        let (x, y) = self.pixels.window_pos_to_pixel((position.x.floor() as f32, position.y.floor() as f32)).unwrap_or_else(|pos|self.pixels.clamp_pixel_pos(pos));
+                        self.input_info.update_mouse_pixel_pos(x as u32, y as u32)
+                    }
                     WindowEvent::CursorEntered { .. } => {}
                     WindowEvent::CursorLeft { .. } => {}
                     WindowEvent::MouseWheel { .. } => {}
-                    WindowEvent::MouseInput { .. } => {}
+                    WindowEvent::MouseInput { device_id, state, button, modifiers } => {
+                        self.input_info.set_mouse_button(button, state)
+                    }
                     WindowEvent::TouchpadPressure { .. } => {}
                     WindowEvent::AxisMotion { .. } => {}
                     WindowEvent::Touch(_) => {}
@@ -107,36 +111,12 @@ impl GameHandler {
             Event::Suspended => {}
             Event::Resumed => {}
             Event::MainEventsCleared => {}
-            Event::RedrawRequested(_) => {}
+            Event::RedrawRequested(window) => {}
             Event::RedrawEventsCleared => {}
             Event::LoopDestroyed => {}
         };
 
         return true
-
-        // if self.input.update(&event) {
-        //     println!("update");
-        //     if let Some(size) = self.input.window_resized() {
-        //         println!("Resizing");
-        //         if size.width > 0 && size.height > 0 {
-        //             self.pixels.resize_surface(size.width, size.height);
-        //         }
-        //     }
-        // }
-
-        // //Close events
-        // if self.input.key_pressed(VirtualKeyCode::Escape) || self.input.quit() {
-        //     return;
-        // }
-        //
-        // //Resize the window
-        // if let Some(size) = self.input.window_resized() {
-        //     println!("Resizing");
-        //     if size.width > 0 && size.height > 0 {
-        //         self.pixels.resize_surface(size.width, size.height);
-        //     }
-        // }
-
     }
 
     fn onResize(&mut self, size : PhysicalSize<u32>) {
@@ -148,11 +128,17 @@ impl GameHandler {
     fn onCloseRequested(&mut self) {}
 }
 
+#[derive(Copy, Clone, Debug)]
+pub struct FrameInfo {
+    number_of_updates: u32,
+    delta: f64
+}
+
 fn main() {
     let event_loop = EventLoop::new();
 
     let window = {
-        let size = LogicalSize::new((WIDTH * 2) as f64, (HEIGHT * 2) as f64);
+        let size = LogicalSize::new((WIDTH * 4) as f64, (HEIGHT * 4) as f64);
         WindowBuilder::new()
             .with_title("Project Blueberry")
             .with_inner_size(size)
@@ -175,68 +161,29 @@ fn main() {
             pixels: pixels,
             imgui,
             main_buffer: Buffer::new(WIDTH, HEIGHT),
-            input :WinitInputHelper::new()
+            input_info: InputInfo::new()
         }
     };
 
-    game_loop(event_loop, window, game_info, 30, 0.1,
+    let buffer = Buffer::from_png_atlas("tileset_0.png", 0, 0, 16, 16);
+
+    game_info.gs.add_behavior("test", Box::new(StaticDrawBehavior::new(buffer)));
+
+    game_loop(event_loop, window, game_info, 60, 0.1,
               |g| {
-                g.game.update()
+                g.game.update();
               }, |g| {
-                g.game.render(&g.window)
+                let fi = FrameInfo {
+                    delta : g.last_frame_time(),
+                    number_of_updates : g.number_of_updates()
+                };
+                g.game.render(&g.window, &fi)
               }, |g, event| {
-                if !g.game.handler(&g.window, event) { g.exit() }
+                let fi = FrameInfo {
+                    delta : g.last_frame_time(),
+                    number_of_updates : g.number_of_updates()
+                };
+                if !g.game.handler(&g.window,  event, &fi) { g.exit() }
             }
     );
-
-    // event_loop.run(move |event, _, control_flow| {
-    //     if let Event::MainEventsCleared = event {
-    //         let delta = startTime.elapsed();
-    //         if delta.as_secs_f64() >= 1.0 {
-    //             println!("{}", updates);
-    //             startTime = Instant::now();
-    //             updates = 0;
-    //         }
-    //
-    //         updates += 1;
-    //
-    //         if (updates % 2) == 0 { window.request_redraw(); }
-    //     }
-    //
-    //     if let Event::RedrawRequested(_) = event {
-    //         main_buffer.dump(pixels.get_frame());
-    //         //im_gui.prepare(&window);
-    //
-    //         let render_results = pixels.render_with(|encoder, render_target, context| {
-    //             context.scaling_renderer.render(encoder, render_target);
-    //             //im_gui.render(&window, encoder, render_target, context).expect("Unable to render IMGUI");
-    //         });
-    //
-    //         if render_results
-    //             .map_err(|e| error!("pixels.render() failed: {}", e))
-    //             .is_err()
-    //         {
-    //             *control_flow = ControlFlow::Exit;
-    //             return;
-    //         }
-    //
-    //         main_buffer.clear();
-    //     }
-    //
-    //     im_gui.handle_event(&window, &event);
-    //     if input.update(&event) {
-    //         // Close events
-    //         if input.key_pressed(VirtualKeyCode::Escape) || input.quit() {
-    //             *control_flow = ControlFlow::Exit;
-    //             return;
-    //         }
-    //
-    //         // Resize the window
-    //         if let Some(size) = input.window_resized() {
-    //             if size.width > 0 && size.height > 0 {
-    //                 pixels.resize_surface(size.width, size.height);
-    //             }
-    //         }
-    //     }
-    // });
 }
