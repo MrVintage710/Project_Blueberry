@@ -1,7 +1,8 @@
 use pixels::{wgpu, PixelsContext};
 use std::time::Instant;
-use imgui::{ImStr, Ui};
+use imgui::{ImStr, Ui, Window, Condition, im_str, CollapsingHeader, WindowFlags, PlotLines};
 use crate::game::GameState;
+use winit::event::VirtualKeyCode::W;
 
 /// Manages all state required for rendering Dear ImGui over `Pixels`.
 pub struct Gui {
@@ -11,6 +12,7 @@ pub struct Gui {
     last_frame: Instant,
     last_cursor: Option<imgui::MouseCursor>,
     about_open: bool,
+    deltas : Vec<f32>
 }
 
 impl Gui {
@@ -60,6 +62,7 @@ impl Gui {
             last_frame: Instant::now(),
             last_cursor: None,
             about_open: false,
+            deltas: Vec::new()
         }
     }
 
@@ -106,11 +109,31 @@ impl Gui {
         }
 
         if self.about_open {
-            ui.show_about_window(&mut self.about_open);
+            ui.show_demo_window(&mut about_open);
         }
 
-        ui.text(format!("UPS {}", delta));
-        gs.debug(&ui);
+        let mut deltas = &mut self.deltas;
+
+        deltas.push(delta as f32);
+        while deltas.len() >= 20 {
+            deltas.remove(0);
+        }
+
+        let average : f32 = deltas.iter().sum::<f32>() / deltas.len() as f32;
+
+        Window::new(im_str!("Blueberry Main"))
+            .flags(WindowFlags::NO_RESIZE | WindowFlags::NO_MOVE)
+            .position([0.0, 20.0], Condition::FirstUseEver)
+            .size([300.0, 800.0], Condition::FirstUseEver)
+            .build(&ui, || {
+                PlotLines::new(&ui, im_str!("Frame Delta"), deltas.as_slice())
+                    .scale_max(0.03)
+                    .scale_min(0.0)
+                    .overlay_text(im_str!("{:.4}", average).as_ref())
+                    .build();
+
+                gs.debug(&ui);
+            });
 
         // Render Dear ImGui with WGPU
         let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {

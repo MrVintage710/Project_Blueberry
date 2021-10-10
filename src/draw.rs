@@ -22,10 +22,9 @@ impl StaticDrawBehavior {
 
 impl GameBehavior for StaticDrawBehavior {
     fn update(&mut self, input_info : &InputInfo) {
-        if input_info.get_mouse_button(MouseButton::Left) {
-            println!("{:?}", input_info.get_mouse_pixel_delta());
-            self.transform.add_vec(&input_info.get_mouse_pixel_delta());
-        }
+        // if input_info.get_mouse_button(MouseButton::Left) {
+        //     self.transform.add_vec(&input_info.get_mouse_pixel_delta());
+        // }
     }
 
     fn render(&self, main_buffer : &mut Buffer) {
