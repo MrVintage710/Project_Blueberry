@@ -3,6 +3,7 @@ use std::time::Instant;
 use imgui::{ImStr, Ui, Window, Condition, im_str, CollapsingHeader, WindowFlags, PlotLines};
 use crate::game::GameState;
 use winit::event::VirtualKeyCode::W;
+use crate::window::WindowInfo;
 
 /// Manages all state required for rendering Dear ImGui over `Pixels`.
 pub struct Gui {
@@ -86,7 +87,8 @@ impl Gui {
         render_target: &wgpu::TextureView,
         context: &PixelsContext,
         gs : &mut GameState,
-        delta : f64
+        delta : f64,
+        window_info: &WindowInfo
     ) -> imgui_wgpu::RendererResult<()> {
         // Start a new Dear ImGui frame and update the cursor
         let ui = self.imgui.frame();
@@ -121,20 +123,24 @@ impl Gui {
 
         let average : f32 = deltas.iter().sum::<f32>() / deltas.len() as f32;
 
-        Window::new(im_str!("Render Info"))
-            .flags(WindowFlags::NO_DECORATION | WindowFlags::ALWAYS_AUTO_RESIZE | WindowFlags::NO_SAVED_SETTINGS | WindowFlags::NO_FOCUS_ON_APPEARING | WindowFlags::NO_NAV | WindowFlags::NO_MOVE);
+        println!("{}", window_info.width);
 
-        Window::new(im_str!("Blueberry Main"))
-            .flags(WindowFlags::NO_RESIZE | WindowFlags::NO_MOVE)
-            .position([0.0, 20.0], Condition::FirstUseEver)
-            .size([300.0, 800.0], Condition::FirstUseEver)
+        Window::new(im_str!("Render Info"))
+            .flags(WindowFlags::NO_DECORATION | WindowFlags::ALWAYS_AUTO_RESIZE | WindowFlags::NO_SAVED_SETTINGS | WindowFlags::NO_FOCUS_ON_APPEARING | WindowFlags::NO_NAV)
+            .position([ window_info.width as f32 - 200.0, 20.0], Condition::Always)
             .build(&ui, || {
                 PlotLines::new(&ui, im_str!("Frame Delta"), deltas.as_slice())
                     .scale_max(0.1)
                     .scale_min(0.0)
                     .overlay_text(im_str!("{:.4}", average).as_ref())
                     .build();
+            });
 
+        Window::new(im_str!("Blueberry Main"))
+            .flags(WindowFlags::NO_RESIZE | WindowFlags::NO_MOVE)
+            .position([0.0, 20.0], Condition::FirstUseEver)
+            .size([300.0, 800.0], Condition::FirstUseEver)
+            .build(&ui, || {
                 gs.debug(&ui);
             });
 

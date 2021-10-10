@@ -7,6 +7,7 @@ mod math;
 mod game;
 mod imgui;
 mod input;
+mod window;
 
 extern crate num_traits;
 
@@ -25,6 +26,7 @@ use crate::imgui::Gui;
 use game_loop::winit::event::{WindowEvent, Event, VirtualKeyCode};
 use crate::draw::StaticDrawBehavior;
 use crate::input::InputInfo;
+use crate::window::WindowInfo;
 
 const WIDTH : u32 = 240;
 const HEIGHT : u32 = 160;
@@ -62,7 +64,8 @@ fn main() {
             pixels: pixels,
             imgui,
             main_buffer: Buffer::new(WIDTH, HEIGHT),
-            input_info: InputInfo::new()
+            input_info: InputInfo::new(),
+            window_info : WindowInfo{ width : WIDTH * 4, height : HEIGHT * 4}
         }
     };
 

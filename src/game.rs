@@ -12,13 +12,15 @@ use winit::window::Window;
 use log::error;
 use winit::event::{Event, WindowEvent};
 use winit::dpi::PhysicalSize;
+use crate::window::WindowInfo;
 
 pub struct Game {
     pub gs : GameState,
     pub pixels: Pixels,
     pub imgui : Gui,
     pub main_buffer : Buffer,
-    pub input_info : InputInfo
+    pub input_info : InputInfo,
+    pub window_info : WindowInfo,
 }
 
 impl Game {
@@ -32,13 +34,14 @@ impl Game {
 
         let imgui = &mut self.imgui;
         let mut gs = &mut self.gs;
+        let window_info = &self.window_info;
 
         gs.render(&mut self.main_buffer);
         self.main_buffer.dump(self.pixels.get_frame());
 
         let results =  self.pixels.render_with(|encoder, render_target, context| {
             context.scaling_renderer.render(encoder, render_target);
-            imgui.render(&window, encoder, render_target, context, gs, frame_info.delta);
+            imgui.render(&window, encoder, render_target, context, gs, frame_info.delta, window_info);
         });
 
         if results
@@ -107,6 +110,9 @@ impl Game {
         if size.width > 0 && size.height > 0 {
             self.pixels.resize_surface(size.width, size.height);
         }
+
+        self.window_info.width = size.width;
+        self.window_info.height = size.height;
     }
 
     fn onCloseRequested(&mut self) {}
