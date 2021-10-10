@@ -121,13 +121,16 @@ impl Gui {
 
         let average : f32 = deltas.iter().sum::<f32>() / deltas.len() as f32;
 
+        Window::new(im_str!("Render Info"))
+            .flags(WindowFlags::NO_DECORATION | WindowFlags::ALWAYS_AUTO_RESIZE | WindowFlags::NO_SAVED_SETTINGS | WindowFlags::NO_FOCUS_ON_APPEARING | WindowFlags::NO_NAV | WindowFlags::NO_MOVE);
+
         Window::new(im_str!("Blueberry Main"))
             .flags(WindowFlags::NO_RESIZE | WindowFlags::NO_MOVE)
             .position([0.0, 20.0], Condition::FirstUseEver)
             .size([300.0, 800.0], Condition::FirstUseEver)
             .build(&ui, || {
                 PlotLines::new(&ui, im_str!("Frame Delta"), deltas.as_slice())
-                    .scale_max(0.03)
+                    .scale_max(0.1)
                     .scale_min(0.0)
                     .overlay_text(im_str!("{:.4}", average).as_ref())
                     .build();
