@@ -11,7 +11,7 @@ impl GameObject {
         }
     }
 
-    fn get_comp<T: 'static + GameComponent>(&self) -> Option<&T> {
+    pub fn get_comp<T: 'static + GameComponent>(&self) -> Option<&T> {
         for i in self.components.iter() {
             let o : Option<&T> = i.as_ref().as_any().downcast_ref::<T>();
             if let Some(comp) = o {
@@ -21,6 +21,17 @@ impl GameObject {
 
         Option::None
     }
+
+    pub fn add_comp<T: 'static + GameComponent>(&mut self, mut gc: T) {
+        gc.on_attach(self);
+        self.components.push(Box::new(gc));
+    }
+
+    pub fn update(&mut self) {
+        for i in self.components.iter_mut() {
+            i.update()
+        }
+    }
 }
 
 pub struct RenderComp {
@@ -28,8 +39,12 @@ pub struct RenderComp {
 }
 
 impl GameComponent for RenderComp {
-    fn render(&mut self) {
-        println!("Render!")
+    fn on_attach(&mut self, obj: &mut GameObject) {
+        let other_comp = obj.get_comp::<RenderComp>();
+    }
+
+    fn update(&mut self) {
+        println!("Update!")
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -38,13 +53,17 @@ impl GameComponent for RenderComp {
 }
 
 pub trait GameComponent {
+    fn on_attach(&mut self, obj : &mut GameObject) {}
     fn render(&mut self) {}
+    fn update(&mut self) {}
     fn as_any(&self) -> &dyn Any;
 }
 
 fn main() {
     let mut go = GameObject::new();
-    go.components.push(Box::new(RenderComp{frames:2}));
+    go.add_comp(RenderComp {frames: 2});
+
+    go.update();
 
     let comp: &RenderComp = go.get_comp::<RenderComp>().unwrap();
 
