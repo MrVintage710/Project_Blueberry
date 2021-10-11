@@ -10,6 +10,7 @@ mod input;
 mod window;
 mod animation;
 mod frame;
+mod object;
 
 extern crate num_traits;
 
