@@ -5,6 +5,7 @@ use crate::game::GameBehavior;
 use imgui::{Ui, ImString, ImStr};
 use crate::input::InputInfo;
 use winit::event::{VirtualKeyCode, MouseButton};
+use crate::frame::FrameInfo;
 
 pub struct StaticDrawBehavior {
     buffer: Buffer,
@@ -21,7 +22,7 @@ impl StaticDrawBehavior {
 }
 
 impl GameBehavior for StaticDrawBehavior {
-    fn update(&mut self, input_info : &InputInfo) {
+    fn update(&mut self, frame_info : &FrameInfo, input_info : &InputInfo) {
         // if input_info.get_mouse_button(MouseButton::Left) {
         //     self.transform.add_vec(&input_info.get_mouse_pixel_delta());
         // }

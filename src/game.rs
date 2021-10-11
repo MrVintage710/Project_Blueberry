@@ -21,27 +21,29 @@ pub struct Game {
     pub main_buffer : Buffer,
     pub input_info : InputInfo,
     pub window_info : WindowInfo,
+    pub frame_info : FrameInfo
 }
 
 impl Game {
     pub fn update(&mut self) {
-        self.gs.update(&self.input_info);
+        self.gs.update(&self.frame_info, &self.input_info);
         self.input_info.update();
     }
 
-    pub fn render(&mut self, window : &Window, frame_info : &FrameInfo) {
+    pub fn render(&mut self, window : &Window) {
         self.imgui.prepare(window);
 
         let imgui = &mut self.imgui;
         let mut gs = &mut self.gs;
         let window_info = &self.window_info;
+        let frame_info = &self.frame_info;
 
         gs.render(&mut self.main_buffer);
         self.main_buffer.dump(self.pixels.get_frame());
 
         let results =  self.pixels.render_with(|encoder, render_target, context| {
             context.scaling_renderer.render(encoder, render_target);
-            imgui.render(&window, encoder, render_target, context, gs, frame_info.delta, window_info);
+            imgui.render(&window, encoder, render_target, context, gs, frame_info.update_delta, window_info);
         });
 
         if results
@@ -55,7 +57,7 @@ impl Game {
         self.main_buffer.clear();
     }
 
-    pub fn handler(&mut self, window : &Window, event : Event<()>, frame_info : &FrameInfo) -> bool{
+    pub fn handler(&mut self, window : &Window, event : Event<()>) -> bool{
         self.imgui.handle_event(window, &event);
 
         match event {
@@ -133,9 +135,9 @@ impl GameState {
         self.behaviors.insert(String::from(name), gb);
     }
 
-    pub fn update(&mut self, input_info : &InputInfo) {
+    pub fn update(&mut self, frame_info: &FrameInfo, input_info : &InputInfo) {
         for (name, i) in self.behaviors.iter_mut() {
-            i.update(input_info);
+            i.update(frame_info, input_info);
         }
     }
 
@@ -157,7 +159,7 @@ impl GameState {
 }
 
 pub trait GameBehavior {
-    fn update(&mut self, input_info : &InputInfo) {}
+    fn update(&mut self, frame_info: &FrameInfo, input_info : &InputInfo) {}
 
     fn render(&self, main_buffer : &mut Buffer) {}
 

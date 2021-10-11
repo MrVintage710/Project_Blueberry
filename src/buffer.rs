@@ -80,7 +80,7 @@ impl Buffer {
 
         for i in 0..width {
             for j in 0..height {
-                let index : usize = ((x + j) * 4 + ((y + i) * info.width * 4)) as usize;
+                let index : usize = ((x + i) * 4 + ((y + j) * info.width * 4)) as usize;
                 buffer.set_pixel(i, j,
                                  frame[index],
                                  frame[index + 1],
@@ -215,5 +215,9 @@ impl BufferAtlas {
 
     pub fn get_buffer(&self, index : usize) -> &Buffer {
         self.buffers.get(index).expect(format!("{} is out of bounds. Length of BufferAtlas: {}", index, self.buffers.len()).as_str())
+    }
+
+    pub fn len(&self) -> usize {
+        self.buffers.len()
     }
 }

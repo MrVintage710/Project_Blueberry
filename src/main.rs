@@ -8,6 +8,8 @@ mod game;
 mod imgui;
 mod input;
 mod window;
+mod animation;
+mod frame;
 
 extern crate num_traits;
 
@@ -27,15 +29,11 @@ use game_loop::winit::event::{WindowEvent, Event, VirtualKeyCode};
 use crate::draw::StaticDrawBehavior;
 use crate::input::InputInfo;
 use crate::window::WindowInfo;
+use crate::frame::FrameInfo;
+use crate::animation::{Animation, AnimationBehavior};
 
 const WIDTH : u32 = 240;
 const HEIGHT : u32 = 160;
-
-#[derive(Copy, Clone, Debug)]
-pub struct FrameInfo {
-    number_of_updates: u32,
-    delta: f64
-}
 
 fn main() {
     let event_loop = EventLoop::new();
@@ -65,29 +63,32 @@ fn main() {
             imgui,
             main_buffer: Buffer::new(WIDTH, HEIGHT),
             input_info: InputInfo::new(),
-            window_info : WindowInfo{ width : WIDTH * 4, height : HEIGHT * 4}
+            window_info : WindowInfo{ width : WIDTH * 4, height : HEIGHT * 4},
+            frame_info : FrameInfo { update_delta: 0.0 }
         }
     };
 
-    let buffer = Buffer::from_png_atlas("tileset_0.png", 0, 0, 16, 16);
+    let buffer_atlas = buffer_atlas!("dungeon_sheet.png" |
+        {64, 112, 16, 16},
+        {80, 112, 16, 16},
+        {96, 112, 16, 16},
+        {112, 112, 16, 16}
+    );
 
-    game.gs.add_behavior("test", Box::new(StaticDrawBehavior::new(buffer)));
+    let anim = Animation::new(buffer_atlas, 0.25);
+
+    game.gs.add_behavior("anim", Box::new(AnimationBehavior::new(anim)));
 
     game_loop(event_loop, window, game, 60, 0.1,
               |g| {
-                g.game.update();
+                  g.game.frame_info.update_delta = g.last_frame_time();
+                  g.game.update();
               }, |g| {
-                let fi = FrameInfo {
-                    delta : g.last_frame_time(),
-                    number_of_updates : g.number_of_updates()
-                };
-                g.game.render(&g.window, &fi)
+                g.game.frame_info.update_delta = g.last_frame_time();
+                g.game.render(&g.window)
               }, |g, event| {
-                let fi = FrameInfo {
-                    delta : g.last_frame_time(),
-                    number_of_updates : g.number_of_updates()
-                };
-                if !g.game.handler(&g.window,  event, &fi) { g.exit() }
+                g.game.frame_info.update_delta = g.last_frame_time();
+                if !g.game.handler(&g.window, event) { g.exit() }
             }
     );
 }

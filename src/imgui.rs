@@ -123,11 +123,9 @@ impl Gui {
 
         let average : f32 = deltas.iter().sum::<f32>() / deltas.len() as f32;
 
-        println!("{}", window_info.width);
-
         Window::new(im_str!("Render Info"))
             .flags(WindowFlags::NO_DECORATION | WindowFlags::ALWAYS_AUTO_RESIZE | WindowFlags::NO_SAVED_SETTINGS | WindowFlags::NO_FOCUS_ON_APPEARING | WindowFlags::NO_NAV)
-            .position([ window_info.width as f32 - 200.0, 20.0], Condition::Always)
+            .position([ window_info.width as f32 - 315.0, 30.0], Condition::Always)
             .build(&ui, || {
                 PlotLines::new(&ui, im_str!("Frame Delta"), deltas.as_slice())
                     .scale_max(0.1)
