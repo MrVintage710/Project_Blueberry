@@ -38,7 +38,7 @@ impl Animation {
     }
 
     fn increment_frame(&mut self) {
-        println!("Total Frames {}", self.total_frames);
+        //println!("Total Frames {}", self.total_frames);
         self.current_frame = if self.current_frame + 1 < self.total_frames {self.current_frame + 1} else {0}
     }
 }

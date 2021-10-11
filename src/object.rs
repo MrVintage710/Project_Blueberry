@@ -11,9 +11,9 @@ impl GameObject {
         }
     }
 
-    fn get_comp<T: GameComponent>(&self) -> Option<&T> {
-        for i in self.components {
-            let o : Option<&T> = i.as_ref().as_any().downcast_ref();
+    fn get_comp<T: 'static + GameComponent>(&self) -> Option<&T> {
+        for i in self.components.iter() {
+            let o : Option<&T> = i.as_ref().as_any().downcast_ref::<T>();
             if let Some(comp) = o {
                 return Option::Some(comp)
             };
