@@ -2,7 +2,7 @@ use std::path::{Path, PathBuf};
 use std::fs::File;
 use std::io::BufWriter;
 use png::{OutputInfo, Reader};
-use crate::math::{Vec2i, Vec2};
+use crate::math::{Vec2i, Vec2, Vec2u};
 
 const PATH_TO_SPRITES : &str = "./assets/sprites/";
 
@@ -14,7 +14,7 @@ fn read_from_file(filename : &str) -> (OutputInfo, Reader<File>) {
     decoder.read_info().expect("Unable to encode image! File may be corrupt or not a png!")
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Buffer {
     width : u32,
     height : u32,
@@ -132,6 +132,10 @@ impl Buffer {
 
     pub fn set_offset(&mut self, x : i32, y : i32) {
         self.offset.set_xy(x, y)
+    }
+
+    pub fn get_offset(&self) -> &Vec2i {
+        &self.offset
     }
 
     pub fn blit(&self, other: &mut Buffer, x : i32, y : i32) {

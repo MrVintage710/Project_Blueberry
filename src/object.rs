@@ -6,14 +6,14 @@ use crate::buffer::Buffer;
 
 pub struct GameObject {
     components : Vec<Box<dyn GameComponent>>,
-    isActive: bool,
-    name : String
+    pub active: bool,
+    pub name : String
 }
 
 impl GameObject {
     pub fn new(name : &str) -> GameObject {
         GameObject {
-            isActive: true,
+            active: true,
             components: Vec::new(),
             name : String::from(name)
         }
@@ -36,14 +36,14 @@ impl GameObject {
     }
 
     pub fn update(&mut self, frame_info: &FrameInfo, input_info : &InputInfo) {
-        if !self.isActive {return}
+        if !self.active {return}
         for i in self.components.iter_mut() {
             i.update(frame_info, input_info)
         }
     }
 
     pub fn render(&mut self, main_buffer : &mut Buffer) {
-        if !self.isActive {return}
+        if !self.active {return}
         for i in self.components.iter_mut() {
             i.render(main_buffer)
         }

@@ -1,9 +1,10 @@
 use crate::buffer::{BufferAtlas, Buffer};
 use crate::math::{Transform, Vec2};
-use crate::game::GameBehavior;
 use crate::input::InputInfo;
 use imgui::Ui;
 use crate::frame::FrameInfo;
+use crate::object::GameComponent;
+use std::any::Any;
 
 pub struct Animation {
     buffer_atlas: BufferAtlas,
@@ -38,38 +39,42 @@ impl Animation {
     }
 
     fn increment_frame(&mut self) {
-        //println!("Total Frames {}", self.total_frames);
+        println!("Total Frames {}", self.total_frames);
         self.current_frame = if self.current_frame + 1 < self.total_frames {self.current_frame + 1} else {0}
     }
 }
 
 
 
-pub struct AnimationBehavior {
+pub struct AnimationComponent {
     animation : Animation,
     transform : Transform
 }
 
-impl AnimationBehavior {
-    pub fn new(animation : Animation) -> AnimationBehavior {
-        AnimationBehavior {
+impl AnimationComponent {
+    pub fn new(animation : Animation) -> AnimationComponent {
+        AnimationComponent {
             animation,
             transform : Transform::from(0, 0)
         }
     }
 }
 
-impl GameBehavior for AnimationBehavior {
+impl GameComponent for AnimationComponent {
     fn update(&mut self, frame_info: &FrameInfo, input_info: &InputInfo) {
         self.animation.update(frame_info.update_delta)
     }
 
-    fn render(&self, main_buffer: &mut Buffer) {
+    fn render(&mut self, main_buffer: &mut Buffer) {
         let (x, y) = self.transform.get_xy();
         self.animation.get_frame().blit(main_buffer, x, y);
     }
 
-    fn debug(&mut self, ui: &Ui) {
+    fn object_debug(&mut self, ui: &Ui) {
         ui.text(format!("On Frame {}", self.animation.current_frame))
+    }
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

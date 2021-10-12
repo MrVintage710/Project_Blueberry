@@ -31,7 +31,7 @@ use crate::draw::StaticDrawBehavior;
 use crate::input::InputInfo;
 use crate::window::WindowInfo;
 use crate::frame::FrameInfo;
-use crate::animation::{Animation, AnimationBehavior};
+use crate::animation::{Animation, AnimationComponent};
 use crate::object::*;
 
 const WIDTH : u32 = 240;
@@ -79,7 +79,11 @@ fn main() {
 
     let anim = Animation::new(buffer_atlas, 0.25);
 
-    let go = go!("test_1");
+    let mut go = go!("test_1" | AnimationComponent::new(anim));
+    go.active = false;
+
+    game.gs.add_gameobject(go);
+
 
     game_loop(event_loop, window, game, 60, 0.1,
               |g| {

@@ -1,9 +1,11 @@
 use pixels::{wgpu, PixelsContext};
 use std::time::Instant;
-use imgui::{ImStr, Ui, Window, Condition, im_str, CollapsingHeader, WindowFlags, PlotLines};
+use imgui::{ImStr, Ui, Window, Condition, im_str, CollapsingHeader, WindowFlags, PlotLines, TreeNode, InputInt2, ImGuiInputTextFlags, Drag, DragRange};
 use crate::game::GameState;
 use winit::event::VirtualKeyCode::W;
 use crate::window::WindowInfo;
+use crate::buffer::Buffer;
+use crate::math::Vec2;
 
 /// Manages all state required for rendering Dear ImGui over `Pixels`.
 pub struct Gui {
@@ -88,7 +90,8 @@ impl Gui {
         context: &PixelsContext,
         gs : &mut GameState,
         delta : f64,
-        window_info: &WindowInfo
+        window_info: &WindowInfo,
+        main_buffer: &mut Buffer
     ) -> imgui_wgpu::RendererResult<()> {
         // Start a new Dear ImGui frame and update the cursor
         let ui = self.imgui.frame();
@@ -139,7 +142,22 @@ impl Gui {
             .position([0.0, 20.0], Condition::FirstUseEver)
             .size([300.0, 800.0], Condition::FirstUseEver)
             .build(&ui, || {
-                gs.debug(&ui);
+                let (x, y) = main_buffer.get_offset().get_xy();
+                let mut cam_pos = [x, y];
+                InputInt2::new(&ui, im_str!("Cam pos"), &mut cam_pos);
+                ui.input_int2(im_str!("Cam pos"), &mut cam_pos).build();
+                if CollapsingHeader::new(im_str!("Game Objects")).default_open(true).build(&ui) {
+                    for (name, go) in gs.iter_mut() {
+                        TreeNode::new(&im_str!("{}", name)).build(&ui, || {
+                            go.debug_objects(&ui);
+                        });
+                        ui.same_line(280.0);
+                        ui.checkbox(im_str!("Active"), &mut go.active);
+
+                    }
+                }
+
+                main_buffer.set_offset(cam_pos[0], cam_pos[1])
             });
 
         // Render Dear ImGui with WGPU

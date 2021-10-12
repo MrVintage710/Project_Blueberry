@@ -1158,6 +1158,7 @@ dependencies = [
  "num-traits",
  "pixels",
  "png",
+ "rotsprite",
  "winit",
  "winit_input_helper",
 ]
@@ -1217,6 +1218,15 @@ name = "renderdoc-sys"
 version = "0.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1382d1f0a252c4bf97dc20d979a2fdd05b024acd7c2ed0f7595d7817666a157"
+
+[[package]]
+name = "rotsprite"
+version = "0.1.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5867c653522ba182f48581e5c57fcde173bacf0549d419fe4c6eec5696f54385"
+dependencies = [
+ "thiserror",
+]
 
 [[package]]
 name = "rusttype"

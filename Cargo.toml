@@ -19,3 +19,4 @@ imgui = "0.7"
 imgui-wgpu = "0.17"
 imgui-winit-support = { version = "0.7.1", default-features = false, features = ["winit-25"] }
 game-loop = { version = "*", features = ["window"] }
+rotsprite = "0.1.3"
