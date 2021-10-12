@@ -6,14 +6,16 @@ use crate::buffer::Buffer;
 
 pub struct GameObject {
     components : Vec<Box<dyn GameComponent>>,
-    isActive: bool
+    isActive: bool,
+    name : String
 }
 
 impl GameObject {
-    fn new() -> GameObject {
+    pub fn new(name : &str) -> GameObject {
         GameObject {
             isActive: true,
-            components: Vec::new()
+            components: Vec::new(),
+            name : String::from(name)
         }
     }
 
@@ -54,21 +56,6 @@ impl GameObject {
     }
 }
 
-pub struct RenderComp {
-    frames : i32
-}
-
-impl GameComponent for RenderComp {
-    fn on_attach(&mut self, obj: &mut GameObject) -> bool {
-        let other_comp = obj.get_comp::<RenderComp>();
-        true
-    }
-
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
-}
-
 pub trait GameComponent {
     fn on_attach(&mut self, obj : &mut GameObject) -> bool {true}
     fn render(&mut self, main_buffer : &mut Buffer) {}
@@ -77,11 +64,18 @@ pub trait GameComponent {
     fn as_any(&self) -> &dyn Any;
 }
 
-fn main() {
-    let mut go = GameObject::new();
-    go.add_comp(RenderComp {frames: 2});
-
-    let comp: &RenderComp = go.get_comp::<RenderComp>().unwrap();
-
-    println!("{}", comp.frames)
+#[macro_export]
+macro_rules! go {
+    ( $n:tt | $($comp:expr),* ) => {
+        {
+            let mut go = GameObject::new($n);
+            $(
+                go.add_comp($comp);
+            )*
+            go
+        }
+    };
+    ( $n:tt ) => {
+        GameObject::new($n)
+    }
 }

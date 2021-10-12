@@ -32,6 +32,7 @@ use crate::input::InputInfo;
 use crate::window::WindowInfo;
 use crate::frame::FrameInfo;
 use crate::animation::{Animation, AnimationBehavior};
+use crate::object::*;
 
 const WIDTH : u32 = 240;
 const HEIGHT : u32 = 160;
@@ -64,7 +65,7 @@ fn main() {
             imgui,
             main_buffer: Buffer::new(WIDTH, HEIGHT),
             input_info: InputInfo::new(),
-            window_info : WindowInfo{ width : WIDTH * 4, height : HEIGHT * 4},
+            window_info : WindowInfo{ width : WIDTH * 4, height : HEIGHT * 4, scale_factor: 1.0},
             frame_info : FrameInfo { update_delta: 0.0 }
         }
     };
@@ -77,6 +78,8 @@ fn main() {
     );
 
     let anim = Animation::new(buffer_atlas, 0.25);
+
+    let go = go!("test_1");
 
     game_loop(event_loop, window, game, 60, 0.1,
               |g| {

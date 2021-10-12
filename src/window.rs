@@ -1,4 +1,5 @@
 pub struct WindowInfo {
-    pub(crate) width : u32,
-    pub(crate) height : u32
+    pub width : u32,
+    pub height : u32,
+    pub scale_factor : f64
 }

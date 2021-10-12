@@ -116,40 +116,41 @@ impl Game {
 
         self.window_info.width = size.width;
         self.window_info.height = size.height;
+
     }
 
     fn onCloseRequested(&mut self) {}
 }
 
 pub struct GameState {
-    behaviors : HashMap<String, GameObject>
+    gameobjects: HashMap<String, GameObject>
 }
 
 impl GameState {
     pub fn new() -> GameState {
         GameState {
-            behaviors : HashMap::new()
+            gameobjects: HashMap::new()
         }
     }
 
     pub fn add_behavior(&mut self, name : &str, gb : GameObject) {
-        self.behaviors.insert(String::from(name), gb);
+        self.gameobjects.insert(String::from(name), gb);
     }
 
     pub fn update(&mut self, frame_info: &FrameInfo, input_info : &InputInfo) {
-        for (name, i) in self.behaviors.iter_mut() {
+        for (name, i) in self.gameobjects.iter_mut() {
             i.update(frame_info, input_info);
         }
     }
 
     pub fn render(&mut self, main_buffer : &mut Buffer) {
-        for (name, i) in self.behaviors.iter_mut() {
+        for (name, i) in self.gameobjects.iter_mut() {
             i.render(main_buffer)
         }
     }
 
     pub fn debug(&mut self, ui : &Ui ) {
-        for (name, i) in self.behaviors.iter_mut() {
+        for (name, i) in self.gameobjects.iter_mut() {
             i.debug_objects(ui)
         }
     }
