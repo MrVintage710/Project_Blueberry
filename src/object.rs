@@ -1,12 +1,18 @@
 use std::any::Any;
+use imgui::Ui;
+use crate::frame::FrameInfo;
+use crate::input::InputInfo;
+use crate::buffer::Buffer;
 
 pub struct GameObject {
-    components : Vec<Box<dyn GameComponent>>
+    components : Vec<Box<dyn GameComponent>>,
+    isActive: bool
 }
 
 impl GameObject {
     fn new() -> GameObject {
         GameObject {
+            isActive: true,
             components: Vec::new()
         }
     }
@@ -23,13 +29,27 @@ impl GameObject {
     }
 
     pub fn add_comp<T: 'static + GameComponent>(&mut self, mut gc: T) {
-        gc.on_attach(self);
+        if !gc.on_attach(self) {return}
         self.components.push(Box::new(gc));
     }
 
-    pub fn update(&mut self) {
+    pub fn update(&mut self, frame_info: &FrameInfo, input_info : &InputInfo) {
+        if !self.isActive {return}
         for i in self.components.iter_mut() {
-            i.update()
+            i.update(frame_info, input_info)
+        }
+    }
+
+    pub fn render(&mut self, main_buffer : &mut Buffer) {
+        if !self.isActive {return}
+        for i in self.components.iter_mut() {
+            i.render(main_buffer)
+        }
+    }
+
+    pub fn debug_objects(&mut self, ui : &Ui) {
+        for i in self.components.iter_mut() {
+            i.object_debug(ui)
         }
     }
 }
@@ -39,12 +59,9 @@ pub struct RenderComp {
 }
 
 impl GameComponent for RenderComp {
-    fn on_attach(&mut self, obj: &mut GameObject) {
+    fn on_attach(&mut self, obj: &mut GameObject) -> bool {
         let other_comp = obj.get_comp::<RenderComp>();
-    }
-
-    fn update(&mut self) {
-        println!("Update!")
+        true
     }
 
     fn as_any(&self) -> &dyn Any {
@@ -53,17 +70,16 @@ impl GameComponent for RenderComp {
 }
 
 pub trait GameComponent {
-    fn on_attach(&mut self, obj : &mut GameObject) {}
-    fn render(&mut self) {}
-    fn update(&mut self) {}
+    fn on_attach(&mut self, obj : &mut GameObject) -> bool {true}
+    fn render(&mut self, main_buffer : &mut Buffer) {}
+    fn update(&mut self, frame_info: &FrameInfo, input_info : &InputInfo) {}
+    fn object_debug(&mut self, ui : &Ui) {}
     fn as_any(&self) -> &dyn Any;
 }
 
 fn main() {
     let mut go = GameObject::new();
     go.add_comp(RenderComp {frames: 2});
-
-    go.update();
 
     let comp: &RenderComp = go.get_comp::<RenderComp>().unwrap();
 

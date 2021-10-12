@@ -78,8 +78,6 @@ fn main() {
 
     let anim = Animation::new(buffer_atlas, 0.25);
 
-    game.gs.add_behavior("anim", Box::new(AnimationBehavior::new(anim)));
-
     game_loop(event_loop, window, game, 60, 0.1,
               |g| {
                   g.game.frame_info.update_delta = g.last_frame_time();

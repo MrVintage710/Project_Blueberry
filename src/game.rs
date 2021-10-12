@@ -13,6 +13,7 @@ use log::error;
 use winit::event::{Event, WindowEvent};
 use winit::dpi::PhysicalSize;
 use crate::window::WindowInfo;
+use crate::object::GameObject;
 
 pub struct Game {
     pub gs : GameState,
@@ -121,7 +122,7 @@ impl Game {
 }
 
 pub struct GameState {
-    behaviors : HashMap<String, Box<dyn GameBehavior>>
+    behaviors : HashMap<String, GameObject>
 }
 
 impl GameState {
@@ -131,7 +132,7 @@ impl GameState {
         }
     }
 
-    pub fn add_behavior(&mut self, name : &str, gb : Box<dyn GameBehavior>) {
+    pub fn add_behavior(&mut self, name : &str, gb : GameObject) {
         self.behaviors.insert(String::from(name), gb);
     }
 
@@ -141,20 +142,16 @@ impl GameState {
         }
     }
 
-    pub fn render(&self, main_buffer : &mut Buffer) {
-        for (name, i) in self.behaviors.iter() {
+    pub fn render(&mut self, main_buffer : &mut Buffer) {
+        for (name, i) in self.behaviors.iter_mut() {
             i.render(main_buffer)
         }
     }
 
     pub fn debug(&mut self, ui : &Ui ) {
         for (name, i) in self.behaviors.iter_mut() {
-            i.debug(ui);
+            i.debug_objects(ui)
         }
-    }
-
-    pub fn get_behavior(&self, name : &str) -> &Box<dyn GameBehavior> {
-        self.behaviors.get(name).expect(format!("GameBehavior with the name '{}' does not exist", name).as_str())
     }
 }
 
