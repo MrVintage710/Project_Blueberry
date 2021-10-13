@@ -6,6 +6,7 @@ use winit::event::VirtualKeyCode::W;
 use crate::window::WindowInfo;
 use crate::buffer::Buffer;
 use crate::math::Vec2;
+use crate::image_buffer::CamBuffer;
 
 /// Manages all state required for rendering Dear ImGui over `Pixels`.
 pub struct Gui {
@@ -91,7 +92,7 @@ impl Gui {
         gs : &mut GameState,
         delta : f64,
         window_info: &WindowInfo,
-        main_buffer: &mut Buffer
+        cam_buffer: &mut CamBuffer
     ) -> imgui_wgpu::RendererResult<()> {
         // Start a new Dear ImGui frame and update the cursor
         let ui = self.imgui.frame();
@@ -142,7 +143,7 @@ impl Gui {
             .position([0.0, 20.0], Condition::FirstUseEver)
             .size([300.0, 800.0], Condition::FirstUseEver)
             .build(&ui, || {
-                let (x, y) = main_buffer.get_offset().get_xy();
+                let (x, y) = cam_buffer.get_offset().get_xy();
                 let mut cam_pos = [x, y];
                 InputInt2::new(&ui, im_str!("Cam pos"), &mut cam_pos);
                 ui.input_int2(im_str!("Cam pos"), &mut cam_pos).build();
@@ -157,7 +158,7 @@ impl Gui {
                     }
                 }
 
-                main_buffer.set_offset(cam_pos[0], cam_pos[1])
+                cam_buffer.set_offset(cam_pos[0], cam_pos[1])
             });
 
         // Render Dear ImGui with WGPU

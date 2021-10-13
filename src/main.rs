@@ -11,6 +11,8 @@ mod window;
 mod animation;
 mod frame;
 mod object;
+mod image_buffer;
+mod color;
 
 extern crate num_traits;
 
@@ -27,12 +29,14 @@ use std::collections::HashMap;
 use crate::game::{GameState, Game};
 use crate::imgui::Gui;
 use game_loop::winit::event::{WindowEvent, Event, VirtualKeyCode};
-use crate::draw::StaticDrawBehavior;
+use crate::draw::{ImageBufferRenderComponent};
 use crate::input::InputInfo;
 use crate::window::WindowInfo;
 use crate::frame::FrameInfo;
 use crate::animation::{Animation, AnimationComponent};
 use crate::object::*;
+use crate::image_buffer::{CamBuffer, SingleImageBuffer, ImageBuffer};
+use crate::color::Color;
 
 const WIDTH : u32 = 240;
 const HEIGHT : u32 = 160;
@@ -63,7 +67,7 @@ fn main() {
             gs: GameState::new(),
             pixels: pixels,
             imgui,
-            main_buffer: Buffer::new(WIDTH, HEIGHT),
+            main_buffer: CamBuffer::new(WIDTH as usize, HEIGHT as usize),
             input_info: InputInfo::new(),
             window_info : WindowInfo{ width : WIDTH * 4, height : HEIGHT * 4, scale_factor: 1.0},
             frame_info : FrameInfo { update_delta: 0.0 }
@@ -79,8 +83,8 @@ fn main() {
 
     let anim = Animation::new(buffer_atlas, 0.25);
 
-    let mut go = go!("test_1" | AnimationComponent::new(anim));
-    go.active = false;
+    let mut ib = SingleImageBuffer::from("test.png");
+    let mut go = go!("test_1"| ImageBufferRenderComponent::new(ib));
 
     game.gs.add_gameobject(go);
 

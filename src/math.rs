@@ -2,6 +2,9 @@ use std::ops::{Add, Deref};
 
 extern crate num_traits;
 use num_traits::Num;
+use crate::object::GameComponent;
+use std::any::Any;
+use imgui::Ui;
 
 pub trait Vec2<T: Num> {
 
@@ -181,5 +184,32 @@ impl Vec2<i32> for Transform {
     fn set_xy(&mut self, x: i32, y: i32) {
         self.x = x;
         self.y = y;
+    }
+}
+
+pub struct TransformComponent {
+    transform : Transform
+}
+
+impl TransformComponent {
+    pub fn new() -> TransformComponent {
+        TransformComponent {
+            transform: Transform::from(0, 0)
+        }
+    }
+
+    pub fn get_transform(&self) -> &Transform {
+        &self.transform
+    }
+}
+
+impl GameComponent for TransformComponent {
+    fn object_debug(&mut self, ui: &Ui) {
+        ui.text(format!("Tranform: [{}, {}]", self.transform.x, self.transform.y))
+    }
+
+
+    fn as_any(&self) -> &dyn Any {
+        self
     }
 }

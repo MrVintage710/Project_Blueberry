@@ -15,12 +15,13 @@ use winit::dpi::PhysicalSize;
 use crate::window::WindowInfo;
 use crate::object::GameObject;
 use std::collections::hash_map::IterMut;
+use crate::image_buffer::{CamBuffer, ImageBuffer};
 
 pub struct Game {
     pub gs : GameState,
     pub pixels: Pixels,
     pub imgui : Gui,
-    pub main_buffer : Buffer,
+    pub main_buffer : CamBuffer,
     pub input_info : InputInfo,
     pub window_info : WindowInfo,
     pub frame_info : FrameInfo
@@ -145,7 +146,7 @@ impl GameState {
         }
     }
 
-    pub fn render(&mut self, main_buffer : &mut Buffer) {
+    pub fn render(&mut self, main_buffer : &mut CamBuffer) {
         for (name, i) in self.gameobjects.iter_mut() {
             i.render(main_buffer)
         }

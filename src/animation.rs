@@ -5,6 +5,7 @@ use imgui::Ui;
 use crate::frame::FrameInfo;
 use crate::object::GameComponent;
 use std::any::Any;
+use crate::image_buffer::CamBuffer;
 
 pub struct Animation {
     buffer_atlas: BufferAtlas,
@@ -39,7 +40,6 @@ impl Animation {
     }
 
     fn increment_frame(&mut self) {
-        println!("Total Frames {}", self.total_frames);
         self.current_frame = if self.current_frame + 1 < self.total_frames {self.current_frame + 1} else {0}
     }
 }
@@ -65,9 +65,9 @@ impl GameComponent for AnimationComponent {
         self.animation.update(frame_info.update_delta)
     }
 
-    fn render(&mut self, main_buffer: &mut Buffer) {
+    fn render(&mut self, main_buffer: &mut CamBuffer) {
         let (x, y) = self.transform.get_xy();
-        self.animation.get_frame().blit(main_buffer, x, y);
+        //self.animation.get_frame().blit(main_buffer, x, y);
     }
 
     fn object_debug(&mut self, ui: &Ui) {
