@@ -13,9 +13,10 @@ use log::error;
 use winit::event::{Event, WindowEvent};
 use winit::dpi::PhysicalSize;
 use crate::window::WindowInfo;
-use crate::object::GameObject;
+use crate::comps::object::GameObject;
 use std::collections::hash_map::IterMut;
 use crate::image_buffer::{CamBuffer, ImageBuffer};
+use std::io::Empty;
 
 pub struct Game {
     pub gs : GameState,
@@ -78,7 +79,9 @@ impl Game {
                     WindowEvent::ReceivedCharacter(_) => {}
                     WindowEvent::Focused(_) => {}
                     WindowEvent::KeyboardInput { device_id, input, is_synthetic } => {
-                        self.input_info.set_key(input.virtual_keycode.expect("Unknown key code."), input.state)
+                        if input.virtual_keycode.is_some() {
+                            self.input_info.set_key(input.virtual_keycode.unwrap(), input.state)
+                        }
                     }
                     WindowEvent::ModifiersChanged(_) => {}
                     WindowEvent::CursorMoved { device_id, position, modifiers } => {

@@ -3,7 +3,7 @@ use crate::math::{Transform, Vec2};
 use crate::input::InputInfo;
 use imgui::Ui;
 use crate::frame::FrameInfo;
-use crate::object::GameComponent;
+use crate::comps::object::GameComponent;
 use std::any::Any;
 use crate::image_buffer::CamBuffer;
 

@@ -1,20 +1,22 @@
 use crate::image_buffer::{ImageBuffer, CamBuffer, SingleImageBuffer};
-use crate::object::{GameComponent, GameObject};
+use crate::comps::object::{GameComponent, GameObject};
 use std::any::Any;
-use crate::math::TransformComponent;
 use crate::frame::FrameInfo;
 use crate::input::InputInfo;
+use crate::comps::transform::TransformComponent;
 
 pub struct ImageBufferRenderComponent<T: ImageBuffer> {
     buffer : T,
-    rotation : f64
+    transform: Option<Box<TransformComponent>>,
+    rotation: f64
 }
 
 impl<T: ImageBuffer> ImageBufferRenderComponent<T> {
     pub fn new(buffer : T) -> ImageBufferRenderComponent<T> {
         ImageBufferRenderComponent {
             buffer,
-            rotation : 0.0
+            transform: Option::None,
+            rotation: 0.0
         }
     }
 }
@@ -30,7 +32,7 @@ impl<T: 'static + ImageBuffer> GameComponent for ImageBufferRenderComponent<T> {
     }
 
     fn update(&mut self, frame_info: &FrameInfo, input_info: &InputInfo) {
-        self.rotation += 0.5
+        self.rotation += 0.8
     }
 
     fn as_any(&self) -> &dyn Any {

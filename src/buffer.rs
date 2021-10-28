@@ -46,7 +46,7 @@ impl Buffer {
             width,
             height,
             buffer,
-            offset : Vec2i::zero()
+            offset : Vec2i::new(0, 0)
         }
     }
 
@@ -55,7 +55,7 @@ impl Buffer {
             width,
             height,
             buffer,
-            offset : Vec2i::zero()
+            offset : Vec2i::new(0, 0)
         }
     }
 

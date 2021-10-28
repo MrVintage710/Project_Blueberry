@@ -2,11 +2,13 @@ use std::ops::{Add, Deref};
 
 extern crate num_traits;
 use num_traits::Num;
-use crate::object::GameComponent;
+use crate::comps::object::GameComponent;
 use std::any::Any;
 use imgui::Ui;
 
 pub trait Vec2<T: Num> {
+
+    fn new(x : T, y : T) -> Self where Self: Sized;
 
     fn get_xy(&self) -> (T, T);
 
@@ -15,6 +17,18 @@ pub trait Vec2<T: Num> {
     fn set_from(&mut self, other : &Vec2<T>) {
         let (x, y) = other.get_xy();
         self.set_xy(x, y);
+    }
+
+    fn get_x(&self) -> T {
+        self.get_xy().0
+    }
+
+    fn get_y(&self) -> T {
+        self.get_xy().1
+    }
+
+    fn get_as_arr(&self) -> [T; 2] {
+        [self.get_x(), self.get_y()]
     }
 
     fn add_vec(&mut self, other : &Vec2<T>) {
@@ -59,15 +73,10 @@ macro_rules! vec2i {
     }
 }
 
-impl Vec2i {
-    pub fn new(x : i32, y : i32) -> Vec2i {
-        Vec2i { x, y }
-    }
-
-    pub fn zero() -> Vec2i { Vec2i::new(0, 0) }
-}
-
 impl Vec2<i32> for Vec2i {
+    fn new(x: i32, y: i32) -> Self {
+        Vec2i{x, y}
+    }
 
     fn get_xy(&self) -> (i32, i32) {
         (self.x, self.y)
@@ -103,6 +112,9 @@ impl Vec2u {
 }
 
 impl Vec2<u32> for Vec2u {
+    fn new(x: u32, y: u32) -> Self {
+        Vec2u{x, y}
+    }
 
     fn get_xy(&self) -> (u32, u32) {
         (self.x, self.y)
@@ -138,6 +150,9 @@ impl Vec2f {
 }
 
 impl Vec2<f64> for Vec2f {
+    fn new(x: f64, y: f64) -> Self {
+        Vec2f{x, y}
+    }
 
     fn get_xy(&self) -> (f64, f64) {
         (self.x, self.y)
@@ -171,6 +186,13 @@ impl Transform {
 }
 
 impl Vec2<i32> for Transform {
+    fn new(x: i32, y: i32) -> Self {
+        Transform{
+            x, y,
+            parent: Option::None
+        }
+    }
+
     fn get_xy(&self) -> (i32, i32) {
         match &self.parent {
             None => {(self.x, self.y)}

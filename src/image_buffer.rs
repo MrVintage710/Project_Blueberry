@@ -121,7 +121,7 @@ impl CamBuffer {
         CamBuffer {
             width, height,
             buffer : vec![Color::CLEAR; width * height],
-            offset: Vec2i::zero()
+            offset: Vec2i::new(0, 0)
         }
     }
 

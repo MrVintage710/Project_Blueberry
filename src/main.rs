@@ -1,8 +1,31 @@
 #![deny(clippy::all)]
-#![forbid(unsafe_code)]
+
+use std::collections::HashMap;
+use std::time::Instant;
+
+use game_loop::game_loop;
+use game_loop::winit::event::{Event, VirtualKeyCode, WindowEvent};
+use game_loop::winit::event_loop::{ControlFlow, EventLoop};
+use log::error;
+use pixels::{Pixels, SurfaceTexture};
+use winit::dpi::{LogicalSize, PhysicalSize};
+use winit::window::{Window, WindowBuilder};
+
+use comps::draw::ImageBufferRenderComponent;
+use comps::object::*;
+
+use crate::animation::{Animation, AnimationComponent};
+use crate::buffer::{Buffer, BufferAtlas};
+use crate::color::Color;
+use crate::frame::FrameInfo;
+use crate::game::{Game, GameState};
+use crate::image_buffer::{CamBuffer, ImageBuffer, SingleImageBuffer};
+use crate::imgui::Gui;
+use crate::input::InputInfo;
+use crate::math::{Vec2, Vec2i};
+use crate::window::WindowInfo;
 
 mod buffer;
-mod draw;
 mod math;
 mod game;
 mod imgui;
@@ -10,33 +33,11 @@ mod input;
 mod window;
 mod animation;
 mod frame;
-mod object;
 mod image_buffer;
 mod color;
+mod comps;
 
 extern crate num_traits;
-
-use winit::dpi::{LogicalSize, PhysicalSize};
-use log::error;
-use game_loop::game_loop;
-use game_loop::winit::event_loop::{EventLoop, ControlFlow};
-use winit::window::{WindowBuilder, Window};
-use pixels::{SurfaceTexture, Pixels};
-use crate::buffer::{Buffer, BufferAtlas};
-use crate::math::{Vec2i, Vec2};
-use std::time::Instant;
-use std::collections::HashMap;
-use crate::game::{GameState, Game};
-use crate::imgui::Gui;
-use game_loop::winit::event::{WindowEvent, Event, VirtualKeyCode};
-use crate::draw::{ImageBufferRenderComponent};
-use crate::input::InputInfo;
-use crate::window::WindowInfo;
-use crate::frame::FrameInfo;
-use crate::animation::{Animation, AnimationComponent};
-use crate::object::*;
-use crate::image_buffer::{CamBuffer, SingleImageBuffer, ImageBuffer};
-use crate::color::Color;
 
 const WIDTH : u32 = 240;
 const HEIGHT : u32 = 160;
@@ -83,7 +84,8 @@ fn main() {
 
     let anim = Animation::new(buffer_atlas, 0.25);
 
-    let mut ib = SingleImageBuffer::from("test.png");
+    let mut ib = SingleImageBuffer::from("gear.png");
+    let mut ib2 = SingleImageBuffer::from("gear.png");
     let mut go = go!("test_1"| ImageBufferRenderComponent::new(ib));
 
     game.gs.add_gameobject(go);
